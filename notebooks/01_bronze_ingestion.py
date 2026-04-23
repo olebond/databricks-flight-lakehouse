@@ -5,19 +5,19 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC #lab2_bronze_ingestion
+# MAGIC # Bronze ingestion notebook
 # MAGIC
-# MAGIC # LAB2 Notes - Azure + Databricks Bronze Pipeline
+# MAGIC # Azure + Databricks Bronze Pipeline
 # MAGIC
 # MAGIC This notebook loads raw data from Azure Storage and writes it into a Bronze Delta table.
 # MAGIC
 # MAGIC **## Azure Storage**
 # MAGIC
 # MAGIC Storage account:
-# MAGIC sadlsdev
+# MAGIC demostorageacct
 # MAGIC
 # MAGIC Container:
-# MAGIC bondarcontainer
+# MAGIC demo-container
 # MAGIC
 # MAGIC Data lake folder structure:
 # MAGIC
@@ -30,7 +30,7 @@
 # MAGIC flights.csv
 # MAGIC
 # MAGIC File location in storage:
-# MAGIC bondarcontainer/raw/flights.csv
+# MAGIC demo-container/raw/flights.csv
 # MAGIC
 # MAGIC ---
 # MAGIC
@@ -44,27 +44,27 @@
 # MAGIC
 # MAGIC Schemas used in the lakehouse:
 # MAGIC
-# MAGIC dbr_dev.bondar_raw  
-# MAGIC dbr_dev.bondar_bronze  
-# MAGIC dbr_dev.bondar_silver (planned)  
-# MAGIC dbr_dev.bondar_gold (planned)
+# MAGIC dbr_dev.flight_raw  
+# MAGIC dbr_dev.flight_bronze  
+# MAGIC dbr_dev.flight_silver (planned)  
+# MAGIC dbr_dev.flight_gold (planned)
 # MAGIC
 # MAGIC ---
 # MAGIC
 # MAGIC ## Access to Azure Storage
 # MAGIC
 # MAGIC External Location created:
-# MAGIC sadlsdev_raw
+# MAGIC demostorageacct_raw
 # MAGIC
 # MAGIC Path:
-# MAGIC abfss://bondarcontainer@sadlsdev.dfs.core.windows.net/
+# MAGIC abfss://demo-container@demostorageacct.dfs.core.windows.net/
 # MAGIC
 # MAGIC External Volume created:
-# MAGIC dbr_dev.bondar_raw.raw_files
+# MAGIC dbr_dev.flight_raw.raw_files
 # MAGIC
 # MAGIC Databricks reads the raw data through the volume path:
 # MAGIC
-# MAGIC /Volumes/dbr_dev/bondar_raw/raw_files/
+# MAGIC /Volumes/dbr_dev/flight_raw/raw_files/
 # MAGIC
 # MAGIC ---
 # MAGIC
@@ -82,7 +82,7 @@
 # MAGIC
 # MAGIC Bronze table created:
 # MAGIC
-# MAGIC dbr_dev.bondar_bronze.flights_bronze
+# MAGIC dbr_dev.flight_bronze.flights_bronze
 # MAGIC
 # MAGIC ---
 # MAGIC
@@ -105,8 +105,8 @@
 # MAGIC flights.csv  
 # MAGIC → RAW volume  
 # MAGIC → Bronze Delta table  
-# MAGIC → (Silver layer – LAB3)  
-# MAGIC → (Gold layer – LAB3)
+# MAGIC → Silver layer  
+# MAGIC → Gold layer
 # MAGIC
 # MAGIC ---
 # MAGIC
@@ -127,19 +127,19 @@
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC CREATE EXTERNAL LOCATION sadlsdev_raw
-# MAGIC URL 'abfss://bondarcontainer@sadlsdev.dfs.core.windows.net/'
-# MAGIC WITH (STORAGE CREDENTIAL dls_dev);
+# MAGIC CREATE EXTERNAL LOCATION demostorageacct_raw
+# MAGIC URL 'abfss://demo-container@demostorageacct.dfs.core.windows.net/'
+# MAGIC WITH (STORAGE CREDENTIAL demo_storage_credential);
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC CREATE EXTERNAL VOLUME dbr_dev.bondar_raw.raw_files
-# MAGIC LOCATION 'abfss://bondarcontainer@sadlsdev.dfs.core.windows.net/raw/';
+# MAGIC CREATE EXTERNAL VOLUME dbr_dev.flight_raw.raw_files
+# MAGIC LOCATION 'abfss://demo-container@demostorageacct.dfs.core.windows.net/raw/';
 
 # COMMAND ----------
 
-display(dbutils.fs.ls("/Volumes/dbr_dev/bondar_raw/raw_files"))
+display(dbutils.fs.ls("/Volumes/dbr_dev/flight_raw/raw_files"))
 
 # COMMAND ----------
 
@@ -147,7 +147,7 @@ from pyspark.sql.functions import current_timestamp, current_date, col
 
 # COMMAND ----------
 
-raw_path = "/Volumes/dbr_dev/bondar_raw/raw_files/flights.csv"
+raw_path = "/Volumes/dbr_dev/flight_raw/raw_files/flights.csv"
 
 raw_df = (
     spark.read
@@ -171,10 +171,10 @@ bronze_df = (
 bronze_df.write \
     .format("delta") \
     .mode("overwrite") \
-    .saveAsTable("dbr_dev.bondar_bronze.flights_bronze")
+    .saveAsTable("dbr_dev.flight_bronze.flights_bronze")
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC SELECT COUNT(*) AS total_rows
-# MAGIC FROM dbr_dev.bondar_bronze.flights_bronze;
+# MAGIC FROM dbr_dev.flight_bronze.flights_bronze;

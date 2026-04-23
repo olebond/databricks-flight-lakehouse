@@ -1,16 +1,16 @@
 -- Databricks notebook source
 -- MAGIC %md
--- MAGIC # LAB2 Notes - Azure + Databricks Bronze Pipeline
+-- MAGIC # Azure + Databricks Bronze Pipeline
 -- MAGIC
 -- MAGIC This notebook reads raw flight data from Azure Storage and writes it into the Bronze layer.
 -- MAGIC
 -- MAGIC ## Azure Storage
 -- MAGIC
 -- MAGIC Storage account:
--- MAGIC sadlsdev
+-- MAGIC demostorageacct
 -- MAGIC
 -- MAGIC Container:
--- MAGIC bondarcontainer
+-- MAGIC demo-container
 -- MAGIC
 -- MAGIC Folders:
 -- MAGIC raw
@@ -22,7 +22,7 @@
 -- MAGIC flights.csv
 -- MAGIC
 -- MAGIC Raw file location:
--- MAGIC bondarcontainer/raw/flights.csv
+-- MAGIC demo-container/raw/flights.csv
 -- MAGIC
 -- MAGIC ## Databricks / Unity Catalog
 -- MAGIC
@@ -30,18 +30,18 @@
 -- MAGIC dbr_dev
 -- MAGIC
 -- MAGIC Schemas:
--- MAGIC dbr_dev.bondar_raw
--- MAGIC dbr_dev.bondar_bronze
--- MAGIC dbr_dev.bondar_silver
--- MAGIC dbr_dev.bondar_gold
+-- MAGIC dbr_dev.flight_raw
+-- MAGIC dbr_dev.flight_bronze
+-- MAGIC dbr_dev.flight_silver
+-- MAGIC dbr_dev.flight_gold
 -- MAGIC
 -- MAGIC ## Access objects
 -- MAGIC
 -- MAGIC External Location:
--- MAGIC sadlsdev_raw
+-- MAGIC demostorageacct_raw
 -- MAGIC
 -- MAGIC Raw Volume:
--- MAGIC dbr_dev.bondar_raw.raw_files
+-- MAGIC dbr_dev.flight_raw.raw_files
 -- MAGIC
 -- MAGIC ## Pipeline steps
 -- MAGIC
@@ -62,34 +62,34 @@
 
 -- COMMAND ----------
 
-CREATE SCHEMA IF NOT EXISTS dbr_dev.bondar_raw;
+CREATE SCHEMA IF NOT EXISTS dbr_dev.flight_raw;
 
 -- COMMAND ----------
 
-CREATE SCHEMA IF NOT EXISTS dbr_dev.bondar_bronze;
+CREATE SCHEMA IF NOT EXISTS dbr_dev.flight_bronze;
 
 -- COMMAND ----------
 
-CREATE SCHEMA IF NOT EXISTS dbr_dev.bondar_silver;
+CREATE SCHEMA IF NOT EXISTS dbr_dev.flight_silver;
 
 -- COMMAND ----------
 
-CREATE SCHEMA IF NOT EXISTS dbr_dev.bondar_gold;
+CREATE SCHEMA IF NOT EXISTS dbr_dev.flight_gold;
 
 -- COMMAND ----------
 
-CREATE EXTERNAL LOCATION IF NOT EXISTS sadlsdev_raw
-URL 'abfss://bondarcontainer@sadlsdev.dfs.core.windows.net/'
-WITH (STORAGE CREDENTIAL dls_dev);
+CREATE EXTERNAL LOCATION IF NOT EXISTS demostorageacct_raw
+URL 'abfss://demo-container@demostorageacct.dfs.core.windows.net/'
+WITH (STORAGE CREDENTIAL demo_storage_credential);
 
 -- COMMAND ----------
 
-CREATE EXTERNAL VOLUME IF NOT EXISTS dbr_dev.bondar_raw.raw_files
-LOCATION 'abfss://bondarcontainer@sadlsdev.dfs.core.windows.net/raw/';
+CREATE EXTERNAL VOLUME IF NOT EXISTS dbr_dev.flight_raw.raw_files
+LOCATION 'abfss://demo-container@demostorageacct.dfs.core.windows.net/raw/';
 
 -- COMMAND ----------
 
-DROP VOLUME IF EXISTS dbr_dev.bondar_bronze.bronze_files;
+DROP VOLUME IF EXISTS dbr_dev.flight_bronze.bronze_files;
 
 -- COMMAND ----------
 
@@ -99,8 +99,8 @@ DROP VOLUME IF EXISTS dbr_dev.bondar_bronze.bronze_files;
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC raw_path = "/Volumes/dbr_dev/bondar_raw/raw_files/flights.csv"
--- MAGIC bronze_output_path = "abfss://bondarcontainer@sadlsdev.dfs.core.windows.net/bronze/flights_bronze"
+-- MAGIC raw_path = "/Volumes/dbr_dev/flight_raw/raw_files/flights.csv"
+-- MAGIC bronze_output_path = "abfss://demo-container@demostorageacct.dfs.core.windows.net/bronze/flights_bronze"
 
 -- COMMAND ----------
 
@@ -133,13 +133,13 @@ DROP VOLUME IF EXISTS dbr_dev.bondar_bronze.bronze_files;
 
 -- COMMAND ----------
 
-DROP TABLE IF EXISTS dbr_dev.bondar_bronze.flights_bronze_ext;
+DROP TABLE IF EXISTS dbr_dev.flight_bronze.flights_bronze_ext;
 
 -- COMMAND ----------
 
-CREATE TABLE dbr_dev.bondar_bronze.flights_bronze_ext
+CREATE TABLE dbr_dev.flight_bronze.flights_bronze_ext
 USING DELTA
-LOCATION 'abfss://bondarcontainer@sadlsdev.dfs.core.windows.net/bronze/flights_bronze';
+LOCATION 'abfss://demo-container@demostorageacct.dfs.core.windows.net/bronze/flights_bronze';
 
 -- COMMAND ----------
 

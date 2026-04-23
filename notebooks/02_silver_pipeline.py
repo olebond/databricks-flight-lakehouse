@@ -1,5 +1,5 @@
 # Databricks notebook source
-bronze_df = spark.read.table("dbr_dev.bondar_bronze.flights_bronze")
+bronze_df = spark.read.table("dbr_dev.flight_bronze.flights_bronze")
 
 display(bronze_df)
 bronze_df.printSchema()
@@ -114,12 +114,12 @@ print("After dedup:", dedup_df.count())
 
 # COMMAND ----------
 
-spark.sql("CREATE SCHEMA IF NOT EXISTS dbr_dev.bondar_silver")
+spark.sql("CREATE SCHEMA IF NOT EXISTS dbr_dev.flight_silver")
 
 # COMMAND ----------
 
 spark.sql("""
-CREATE TABLE IF NOT EXISTS dbr_dev.bondar_silver.flights_silver (
+CREATE TABLE IF NOT EXISTS dbr_dev.flight_silver.flights_silver (
     flight_date DATE,
     day_of_week INT,
     airline STRING,
@@ -159,11 +159,11 @@ USING DELTA
 
 # COMMAND ----------
 
-spark.sql("DESCRIBE dbr_dev.bondar_silver.flights_silver").show(100, False)
+spark.sql("DESCRIBE dbr_dev.flight_silver.flights_silver").show(100, False)
 
 # COMMAND ----------
 
-spark.sql("SELECT COUNT(*) AS row_count FROM dbr_dev.bondar_silver.flights_silver").show()
+spark.sql("SELECT COUNT(*) AS row_count FROM dbr_dev.flight_silver.flights_silver").show()
 
 # COMMAND ----------
 
@@ -235,7 +235,7 @@ from delta.tables import DeltaTable
 
 # COMMAND ----------
 
-silver_table = DeltaTable.forName(spark, "dbr_dev.bondar_silver.flights_silver")
+silver_table = DeltaTable.forName(spark, "dbr_dev.flight_silver.flights_silver")
 
 # COMMAND ----------
 
@@ -321,13 +321,13 @@ silver_table = DeltaTable.forName(spark, "dbr_dev.bondar_silver.flights_silver")
 
 # COMMAND ----------
 
-spark.sql("SELECT COUNT(*) AS row_count FROM dbr_dev.bondar_silver.flights_silver").show()
+spark.sql("SELECT COUNT(*) AS row_count FROM dbr_dev.flight_silver.flights_silver").show()
 
 # COMMAND ----------
 
 spark.sql("""
 SELECT flight_date, origin_airport, destination_airport, flight_number, silver_loaded_at
-FROM dbr_dev.bondar_silver.flights_silver
+FROM dbr_dev.flight_silver.flights_silver
 LIMIT 10
 """).show(10, False)
 
@@ -415,12 +415,12 @@ LIMIT 10
 
 # COMMAND ----------
 
-spark.sql("SELECT COUNT(*) AS row_count FROM dbr_dev.bondar_silver.flights_silver").show()
+spark.sql("SELECT COUNT(*) AS row_count FROM dbr_dev.flight_silver.flights_silver").show()
 
 # COMMAND ----------
 
 spark.sql("""
-CREATE TABLE IF NOT EXISTS dbr_dev.bondar_silver.flights_silver_scd2 (
+CREATE TABLE IF NOT EXISTS dbr_dev.flight_silver.flights_silver_scd2 (
     flight_date DATE,
     day_of_week INT,
     airline STRING,
@@ -464,7 +464,7 @@ USING DELTA
 
 # COMMAND ----------
 
-cols = spark.table("dbr_dev.bondar_silver.flights_silver_scd2").columns
+cols = spark.table("dbr_dev.flight_silver.flights_silver_scd2").columns
 
 print("record_hash" in cols)
 print("effective_from" in cols)
@@ -532,11 +532,11 @@ scd2_source_df.printSchema()
 
 # COMMAND ----------
 
-scd2_source_df.write.format("delta").mode("append").saveAsTable("dbr_dev.bondar_silver.flights_silver_scd2")
+scd2_source_df.write.format("delta").mode("append").saveAsTable("dbr_dev.flight_silver.flights_silver_scd2")
 
 # COMMAND ----------
 
-spark.sql("SELECT COUNT(*) AS row_count FROM dbr_dev.bondar_silver.flights_silver_scd2").show()
+spark.sql("SELECT COUNT(*) AS row_count FROM dbr_dev.flight_silver.flights_silver_scd2").show()
 
 # COMMAND ----------
 
@@ -606,7 +606,7 @@ scd2_changed_df.filter(F.col("flight_number") == 2).select(
 
 from delta.tables import DeltaTable
 
-scd2_table = DeltaTable.forName(spark, "dbr_dev.bondar_silver.flights_silver_scd2")
+scd2_table = DeltaTable.forName(spark, "dbr_dev.flight_silver.flights_silver_scd2")
 
 (
     scd2_table.alias("t")
@@ -632,7 +632,7 @@ scd2_table = DeltaTable.forName(spark, "dbr_dev.bondar_silver.flights_silver_scd
 
 # COMMAND ----------
 
-current_target_df = spark.read.table("dbr_dev.bondar_silver.flights_silver_scd2").filter("is_current = true")
+current_target_df = spark.read.table("dbr_dev.flight_silver.flights_silver_scd2").filter("is_current = true")
 
 new_or_changed_df = (
     scd2_changed_df.alias("s")
@@ -653,10 +653,10 @@ new_or_changed_df = (
     .select("s.*")
 )
 
-new_or_changed_df.write.format("delta").mode("append").saveAsTable("dbr_dev.bondar_silver.flights_silver_scd2")
+new_or_changed_df.write.format("delta").mode("append").saveAsTable("dbr_dev.flight_silver.flights_silver_scd2")
 
 # Validate SCD2 result
-spark.sql("SELECT COUNT(*) AS row_count FROM dbr_dev.bondar_silver.flights_silver_scd2").show()
+spark.sql("SELECT COUNT(*) AS row_count FROM dbr_dev.flight_silver.flights_silver_scd2").show()
 
 spark.sql("""
 SELECT
@@ -669,7 +669,7 @@ SELECT
     is_current,
     effective_from,
     effective_to
-FROM dbr_dev.bondar_silver.flights_silver_scd2
+FROM dbr_dev.flight_silver.flights_silver_scd2
 WHERE flight_number = 2
 ORDER BY flight_date, origin_airport, destination_airport, effective_from
 """).show(50, False)
@@ -677,7 +677,7 @@ ORDER BY flight_date, origin_airport, destination_airport, effective_from
 # COMMAND ----------
 
 optimize_result_1 = spark.sql("""
-OPTIMIZE dbr_dev.bondar_silver.flights_silver
+OPTIMIZE dbr_dev.flight_silver.flights_silver
 ZORDER BY (flight_date, origin_airport, destination_airport)
 """)
 
@@ -686,7 +686,7 @@ display(optimize_result_1)
 # COMMAND ----------
 
 optimize_result_2 = spark.sql("""
-OPTIMIZE dbr_dev.bondar_silver.flights_silver_scd2
+OPTIMIZE dbr_dev.flight_silver.flights_silver_scd2
 ZORDER BY (flight_date, origin_airport, destination_airport)
 """)
 
@@ -694,19 +694,19 @@ display(optimize_result_2)
 
 # COMMAND ----------
 
-spark.sql("VACUUM dbr_dev.bondar_silver.flights_silver RETAIN 168 HOURS")
+spark.sql("VACUUM dbr_dev.flight_silver.flights_silver RETAIN 168 HOURS")
 
 # COMMAND ----------
 
-spark.sql("VACUUM dbr_dev.bondar_silver.flights_silver_scd2 RETAIN 168 HOURS")
+spark.sql("VACUUM dbr_dev.flight_silver.flights_silver_scd2 RETAIN 168 HOURS")
 
 # COMMAND ----------
 
-silver_output_path = "abfss://bondarcontainer@sadlsdev.dfs.core.windows.net/silver/flights_silver"
-scd2_output_path = "abfss://bondarcontainer@sadlsdev.dfs.core.windows.net/silver/flights_silver_scd2"
+silver_output_path = "abfss://demo-container@demostorageacct.dfs.core.windows.net/silver/flights_silver"
+scd2_output_path = "abfss://demo-container@demostorageacct.dfs.core.windows.net/silver/flights_silver_scd2"
 
-silver_df = spark.read.table("dbr_dev.bondar_silver.flights_silver")
-scd2_df = spark.read.table("dbr_dev.bondar_silver.flights_silver_scd2")
+silver_df = spark.read.table("dbr_dev.flight_silver.flights_silver")
+scd2_df = spark.read.table("dbr_dev.flight_silver.flights_silver_scd2")
 
 (
     silver_df.write

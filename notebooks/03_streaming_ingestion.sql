@@ -1,6 +1,6 @@
 -- Databricks notebook source
 -- MAGIC %md
--- MAGIC # LAB3 - Streaming and Event-Based Ingestion
+-- MAGIC # Streaming and Event-Based Ingestion
 -- MAGIC
 -- MAGIC ## File Streaming
 -- MAGIC - Generate multiple input files
@@ -17,7 +17,7 @@
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC flights_path = "abfss://bondarcontainer@sadlsdev.dfs.core.windows.net/raw/flights.csv"
+-- MAGIC flights_path = "abfss://demo-container@demostorageacct.dfs.core.windows.net/raw/flights.csv"
 -- MAGIC
 -- MAGIC flights_df = (
 -- MAGIC     spark.read
@@ -40,7 +40,7 @@
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC stream_input_path = "abfss://bondarcontainer@sadlsdev.dfs.core.windows.net/raw/flights_stream_input/"
+-- MAGIC stream_input_path = "abfss://demo-container@demostorageacct.dfs.core.windows.net/raw/flights_stream_input/"
 
 -- COMMAND ----------
 
@@ -67,10 +67,10 @@
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC source_path = "abfss://bondarcontainer@sadlsdev.dfs.core.windows.net/raw/flights_stream_input/"
--- MAGIC bronze_output_path = "abfss://bondarcontainer@sadlsdev.dfs.core.windows.net/bronze/flights_stream_bronze/"
--- MAGIC checkpoint_path = "abfss://bondarcontainer@sadlsdev.dfs.core.windows.net/_checkpoint/autoloader_flights/"
--- MAGIC schema_location = "abfss://bondarcontainer@sadlsdev.dfs.core.windows.net/_schemas/autoloader_flights/"
+-- MAGIC source_path = "abfss://demo-container@demostorageacct.dfs.core.windows.net/raw/flights_stream_input/"
+-- MAGIC bronze_output_path = "abfss://demo-container@demostorageacct.dfs.core.windows.net/bronze/flights_stream_bronze/"
+-- MAGIC checkpoint_path = "abfss://demo-container@demostorageacct.dfs.core.windows.net/_checkpoint/autoloader_flights/"
+-- MAGIC schema_location = "abfss://demo-container@demostorageacct.dfs.core.windows.net/_schemas/autoloader_flights/"
 
 -- COMMAND ----------
 
@@ -185,8 +185,8 @@
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC event_bronze_output_path = "abfss://bondarcontainer@sadlsdev.dfs.core.windows.net/bronze/synthetic_event_stream_bronze/"
--- MAGIC event_checkpoint_path = "abfss://bondarcontainer@sadlsdev.dfs.core.windows.net/_checkpoint/synthetic_event_stream/"
+-- MAGIC event_bronze_output_path = "abfss://demo-container@demostorageacct.dfs.core.windows.net/bronze/synthetic_event_stream_bronze/"
+-- MAGIC event_checkpoint_path = "abfss://demo-container@demostorageacct.dfs.core.windows.net/_checkpoint/synthetic_event_stream/"
 
 -- COMMAND ----------
 
@@ -196,8 +196,8 @@
 -- MAGIC import time
 -- MAGIC import random
 -- MAGIC
--- MAGIC connection_str = "<PUT_YOUR_CONNECTION_STRING_HERE>"
--- MAGIC eventhub_name = "bondar-eh"
+-- MAGIC connection_str = dbutils.secrets.get(scope="event-hub", key="connection-string")
+-- MAGIC eventhub_name = "demo-flight-events"
 -- MAGIC
 -- MAGIC producer = EventHubProducerClient.from_connection_string(
 -- MAGIC     conn_str=connection_str,
@@ -239,7 +239,7 @@
 -- MAGIC from pyspark.sql.functions import col, from_json
 -- MAGIC from pyspark.sql.types import StructType, StringType, IntegerType
 -- MAGIC
--- MAGIC eventhub_connection_string = "<PUT_YOUR_CONNECTION_STRING_HERE>"
+-- MAGIC eventhub_connection_string = dbutils.secrets.get(scope="event-hub", key="connection-string")
 -- MAGIC
 -- MAGIC eh_conf = {
 -- MAGIC     "eventhubs.connectionString": eventhub_connection_string
@@ -307,6 +307,6 @@
 -- MAGIC - enrich the stream with ingestion metadata
 -- MAGIC - write the result into a Bronze Delta table
 -- MAGIC
--- MAGIC Due to the shared Event Hub namespace reaching its resource limit, a dedicated Event Hub could not be created during this lab.
+-- MAGIC Due to the shared Event Hub namespace reaching its resource limit, a dedicated Event Hub could not be created during this learning project.
 -- MAGIC
 -- MAGIC However, the full pipeline logic and notebook implementation were prepared and are ready to be executed once an Event Hub becomes available.
